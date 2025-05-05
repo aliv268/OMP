@@ -1,0 +1,395 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>نوبت‌دهی آنلاین</title>
+  <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.0/Vazirmatn-font-face.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: #0f1419;
+      color: #d1d4d7;
+      direction: rtl;
+      text-align: center;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+    body.light {
+      background: #ffffff;
+      color: #000000;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+    body.light h2 {
+      color: #000000;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .person {
+      padding: 10px;
+      background: #212b36;
+      border: 2px solid #2f3b4c;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #d1d4d7;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 60px;
+    }
+    body.light .person {
+      background: #f2f2f7;
+      border: 2px solid #d1d1d6;
+      color: #000000;
+    }
+    .person.active {
+      border-color: #3390ec;
+      color: #3390ec;
+    }
+    body.light .person.active {
+      border-color: #007aff;
+      color: #007aff;
+    }
+    .person.inactive {
+      background: #3a1c1c;
+      border-color: #d83b3b;
+      color: #ff6666;
+      cursor: pointer;
+    }
+    body.light .person.inactive {
+      background: #ffe6e6;
+      border-color: #ff3b30;
+      color: #ff3b30;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    .buttons button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Vazirmatn', sans-serif;
+      transition: background 0.2s;
+    }
+    .next {
+      background: #3390ec;
+      color: #ffffff;
+    }
+    body.light .next {
+      background: #007aff;
+    }
+    .next:hover {
+      background: #2878c3;
+    }
+    body.light .next:hover {
+      background: #005bb5;
+    }
+    .back {
+      background: #667788;
+      color: #ffffff;
+    }
+    body.light .back {
+      background: #8e8e93;
+      color: #000000;
+    }
+    .back:hover {
+      background: #556677;
+    }
+    body.light .back:hover {
+      background: #787880;
+    }
+    .status {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    body.light .status {
+      color: #000000;
+    }
+    .theme-toggle {
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      background: #667788;
+      color: #ffffff;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .theme-toggle:hover {
+      background: #556677;
+    }
+    body.light .theme-toggle {
+      background: #8e8e93;
+    }
+    body.light .theme-toggle:hover {
+      background: #787880;
+    }
+    .theme-toggle::before {
+      content: '\f186';
+      font-family: "Font Awesome 6 Free";
+      font-weight: 300;
+      color: #74C0FC;
+      font-size: 20px;
+    }
+    body.light .theme-toggle::before {
+      content: '\f185';
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      color: #FFD700;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>پاسخدهی چت</h2>
+<button class="theme-toggle" onclick="toggleTheme()"></button>
+<div class="grid" id="grid"></div>
+
+<div class="status" id="status">نوبت فعلی: -</div>
+
+<div class="buttons">
+  <button class="back" onclick="prevPerson()">🔙 بازگشت به نفر قبلی</button>
+  <button class="next" onclick="nextPerson()">نفر بعدی 🔜</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, get, push } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+  import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBsgSROXymEE8kXm4Zueaae9fEZNBdfIMg",
+    authDomain: "ompfinex-968c1.firebaseapp.com",
+    databaseURL: "https://ompfinex-968c1-default-rtdb.firebaseio.com",
+    projectId: "ompfinex-968c1",
+    storageBucket: "ompfinex-968c1.firebasestorage.app",
+    messagingSenderId: "875044236378",
+    appId: "1:875044236378:web:b3743a5e85ac15ad167c63",
+    measurementId: "G-Q65SMECMZP"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const messaging = getMessaging(app);
+
+  const people = [
+    "علیرضا رجبی", "سارا جعفری", "ستاره طالقانی", "سعید معصومی",
+    "نیوشا علیزاده", "سهیلا شیرخانی", "رویا کاهانی", "کیانا شریفی",
+    "عماد حسینی", "پریوش میرشاهی", "سوگند افشاری", "نسیم انصاری"
+  ];
+
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("status");
+
+  let currentIndex = -1;
+  let inactiveSet = new Set();
+  let history = [];
+
+  const stateRef = ref(db, "queueState");
+  const subscriptionsRef = ref(db, "pushSubscriptions");
+
+  async function subscribeToNotifications() {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        const token = await getToken(messaging, {
+          vapidKey: "BPJq6Z85Eq3ON4Rabh3WUbcxJU7aqp1GX3DiJxs2F_gWL7-YEIQsgMAvR6xx_DijHIiXbiJeD5jDnsOjDIDtm_A"
+        });
+        if (token) {
+          await push(subscriptionsRef, { token });
+          console.log("اشتراک در نوتیفیکیشن‌ها انجام شد");
+        }
+      }
+    } catch (err) {
+      console.error("خطا در اشتراک نوتیفیکیشن‌ها:", err);
+    }
+  }
+
+  async function sendPushNotification(message) {
+    const snapshot = await get(subscriptionsRef);
+    if (!snapshot.exists()) return;
+
+    const subscriptions = snapshot.val();
+    for (const key in subscriptions) {
+      const { token } = subscriptions[key];
+      try {
+        await fetch("/functions/send-notification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message,
+            token
+          })
+        });
+      } catch (err) {
+        console.error("خطا در ارسال نوتیفیکیشن به", token, ":", err);
+      }
+    }
+  }
+
+  function saveState() {
+    set(stateRef, {
+      currentIndex,
+      inactive: Array.from(inactiveSet),
+      history
+    });
+  }
+
+  function renderGrid() {
+    grid.innerHTML = "";
+    people.forEach((name, index) => {
+      const div = document.createElement("div");
+      div.className = "person";
+
+      if (inactiveSet.has(index)) {
+        div.classList.add("inactive");
+        div.innerHTML = `${name}<br>(غیرفعال/تماس)`;
+      } else if (index === currentIndex) {
+        div.classList.add("active");
+        div.innerHTML = `${name}<br>(آماده پاسخ)`;
+      } else {
+        div.textContent = `${name}`;
+      }
+
+      div.onclick = () => {
+        if (index !== currentIndex) {
+          if (inactiveSet.has(index)) {
+            inactiveSet.delete(index);
+          } else {
+            inactiveSet.add(index);
+          }
+          saveState();
+          renderGrid();
+        }
+      };
+
+      grid.appendChild(div);
+    });
+    updateStatus();
+  }
+
+  function updateStatus() {
+    if (currentIndex >= 0)
+      status.textContent = `نوبت فعلی: ${people[currentIndex]}`;
+    else
+      status.textContent = "نوبت فعلی: -";
+  }
+
+  async function nextPerson() {
+    let i = currentIndex;
+    for (let step = 0; step < people.length; step++) {
+      i = (i + 1) % people.length;
+      if (!inactiveSet.has(i)) {
+        if (currentIndex !== -1) history.push(currentIndex);
+        currentIndex = i;
+        saveState();
+        renderGrid();
+        await sendPushNotification(`نفر بعدی: ${people[currentIndex]}`);
+        return;
+      }
+    }
+    alert("نفر فعالی باقی نمانده!");
+  }
+
+  function prevPerson() {
+    if (history.length > 0) {
+      currentIndex = history.pop();
+      saveState();
+      renderGrid();
+    } else {
+      alert("بازگشتی وجود ندارد.");
+    }
+  }
+
+  function toggleTheme() {
+    document.body.classList.toggle("light");
+  }
+
+  onValue(stateRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    currentIndex = data.currentIndex ?? -1;
+    inactiveSet = new Set(data.inactive ?? []);
+    history = data.history ?? [];
+    renderGrid();
+  });
+
+  get(stateRef).then(snapshot => {
+    if (!snapshot.exists()) {
+      currentIndex = -1;
+      inactiveSet = new Set();
+      history = [];
+      saveState();
+    }
+  });
+
+  subscribeToNotifications();
+
+  window.nextPerson = nextPerson;
+  window.prevPerson = prevPerson;
+  window.toggleTheme = toggleTheme;
+</script>
+
+</body>
+</html>

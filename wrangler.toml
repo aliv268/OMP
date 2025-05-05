@@ -1,0 +1,13 @@
+name = "queue-app"
+main = "functions/send-notification.js"
+compatibility_date = "2025-05-05"
+
+[env.production]
+  route = ""
+  workers_dev = false
+  [env.production.vars]
+    NODE_VERSION = "18"
+
+[site]
+  bucket = "./public"
+  entry-point = "workers-site"
