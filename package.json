@@ -4,8 +4,10 @@
   "description": "A queue management app with push notifications hosted on Cloudflare",
   "main": "index.js",
   "scripts": {
-    "deploy": "wrangler deploy"
-  },
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start"
+},
   "dependencies": {
     "firebase-admin": "^11.6.0"
   },
